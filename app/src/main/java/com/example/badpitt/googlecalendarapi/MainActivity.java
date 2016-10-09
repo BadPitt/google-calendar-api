@@ -1,5 +1,8 @@
 package com.example.badpitt.googlecalendarapi;
 
+import android.databinding.DataBindingUtil;
+import android.support.v7.app.AppCompatActivity;
+import com.example.badpitt.googlecalendarapi.databinding.ActivityMainBinding;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -12,7 +15,6 @@ import com.google.api.services.calendar.CalendarScopes;
 
 import android.Manifest;
 import android.accounts.AccountManager;
-import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -23,12 +25,8 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
-import android.text.method.ScrollingMovementMethod;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,45 +36,30 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 import rx.Subscriber;
 
-public class MainActivity extends Activity
+public class MainActivity extends AppCompatActivity
         implements EasyPermissions.PermissionCallbacks
 {
-    GoogleAccountCredential credential;
-    ProgressDialog progress;
-
-    private TextView outputText;
-    private Button callApiButton;
-    private Button insertNewEventButton;
-
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
 
-    private static final String BUTTON_GET_TEXT = "Get events list";
-    private static final String BUTTON_ADD_TEXT = "Add new event to calendar";
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = {CalendarScopes.CALENDAR};
+
+    private GoogleAccountCredential credential;
+    private ProgressDialog progress;
+
+    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        LinearLayout activityLayout = new LinearLayout(this);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        activityLayout.setLayoutParams(lp);
-        activityLayout.setOrientation(LinearLayout.VERTICAL);
-        activityLayout.setPadding(16, 16, 16, 16);
 
-        ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        callApiButton = new Button(this);
-        callApiButton.setText(BUTTON_GET_TEXT);
-        callApiButton.setOnClickListener(new OnCalendarButtonClickListener()
+        binding.getListButton.setOnClickListener(new OnCalendarButtonClickListener()
         {
             @Override
             public void newRequest()
@@ -84,20 +67,8 @@ public class MainActivity extends Activity
                 getEventList();
             }
         });
-        activityLayout.addView(callApiButton);
 
-        outputText = new TextView(this);
-        outputText.setLayoutParams(tlp);
-        outputText.setPadding(16, 16, 16, 16);
-        outputText.setVerticalScrollBarEnabled(true);
-        outputText.setMovementMethod(new ScrollingMovementMethod());
-        outputText.setText(
-                "Click the \'" + BUTTON_GET_TEXT + "\' button to test the API.");
-        activityLayout.addView(outputText);
-
-        insertNewEventButton = new Button(this);
-        insertNewEventButton.setText(BUTTON_ADD_TEXT);
-        insertNewEventButton.setOnClickListener(new OnCalendarButtonClickListener()
+        binding.addEventButton.setOnClickListener(new OnCalendarButtonClickListener()
         {
             @Override
             public void newRequest()
@@ -105,12 +76,9 @@ public class MainActivity extends Activity
                 addNewEventRequest();
             }
         });
-        activityLayout.addView(insertNewEventButton);
 
         progress = new ProgressDialog(this);
-        progress.setMessage("Calling Google Calendar API ...");
-
-        setContentView(activityLayout);
+        progress.setMessage(getResources().getString(R.string.api_call));
 
         // Initialize credentials and service object.
         credential = GoogleAccountCredential.usingOAuth2(
@@ -129,12 +97,13 @@ public class MainActivity extends Activity
                                       progress.hide();
                                       if (s == null || s.size() == 0)
                                       {
-                                          outputText.setText("No results returned.");
+                                          binding.outputText.setText(
+                                                  getResources().getString(R.string.no_result_returned));
                                       }
                                       else
                                       {
                                           s.add(0, "Data retrieved using the Google Calendar API:");
-                                          outputText.setText(TextUtils.join("\n", s));
+                                          binding.outputText.setText(TextUtils.join("\n", s));
                                       }
                                   }
                               });
@@ -151,15 +120,15 @@ public class MainActivity extends Activity
                                       progress.hide();
                                       if (s == null || s.isEmpty())
                                       {
-                                          outputText.setText("No results returned.");
+                                          binding.outputText.setText(
+                                                  getResources().getString(R.string.no_result_returned));
                                       }
                                       else
                                       {
-                                          outputText.setText(s);
+                                          binding.outputText.setText(s);
                                       }
                                   }
                               });
-
     }
 
     /**
@@ -225,9 +194,7 @@ public class MainActivity extends Activity
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK)
                 {
-                    outputText.setText(
-                            "This app requires Google Play Services. Please install " +
-                            "Google Play Services on your device and relaunch this app.");
+                    binding.outputText.setText(getResources().getString(R.string.google_services_is_requires));
                 }
                 else
                 {
@@ -235,15 +202,15 @@ public class MainActivity extends Activity
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
-                if (resultCode == RESULT_OK && data != null &&
+                if (resultCode == RESULT_OK &&
+                    data != null &&
                     data.getExtras() != null)
                 {
-                    String accountName =
-                            data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                    String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+
                     if (accountName != null)
                     {
-                        SharedPreferences settings =
-                                getPreferences(Context.MODE_PRIVATE);
+                        SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = settings.edit();
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
@@ -315,8 +282,7 @@ public class MainActivity extends Activity
      */
     private boolean isDeviceOnline()
     {
-        ConnectivityManager connMgr =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
     }
@@ -377,7 +343,7 @@ public class MainActivity extends Activity
         public void onClick(View view)
         {
             view.setEnabled(false);
-            outputText.setText("");
+            binding.outputText.setText("");
 
             if (!isGooglePlayServicesAvailable())
             {
@@ -389,7 +355,7 @@ public class MainActivity extends Activity
             }
             else if (!isDeviceOnline())
             {
-                outputText.setText("No network connection available.");
+                binding.outputText.setText(getResources().getString(R.string.no_network));
             }
             else
             {
@@ -407,6 +373,7 @@ public class MainActivity extends Activity
         @Override
         public void onCompleted()
         {
+
         }
 
         @Override
@@ -429,13 +396,15 @@ public class MainActivity extends Activity
                 }
                 else
                 {
-                    outputText.setText("The following error occurred:\n"
-                                       + e.getMessage());
+                    binding.outputText.setText(
+                            String.format("%s%s",
+                                          getResources().getString(R.string.following_error),
+                                          e.getMessage()));
                 }
             }
             else
             {
-                outputText.setText("Request cancelled.");
+                binding.outputText.setText(getResources().getString(R.string.request_cancelled));
             }
         }
 
@@ -443,7 +412,7 @@ public class MainActivity extends Activity
         public void onStart()
         {
             super.onStart();
-            outputText.setText("");
+            binding.outputText.setText("");
             progress.show();
         }
     }

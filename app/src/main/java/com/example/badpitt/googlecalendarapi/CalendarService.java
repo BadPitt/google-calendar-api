@@ -16,7 +16,7 @@ public class CalendarService
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
         service = new com.google.api.services.calendar.Calendar.Builder(
                 transport, jsonFactory, credential)
-                .setApplicationName("My Project")
+                .setApplicationName("GoogleCalendarApi")
                 .build();
         return service;
     }

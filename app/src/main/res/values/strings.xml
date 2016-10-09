@@ -1,4 +1,14 @@
 <resources>
     <string name="app_name">GoogleCalendarApi</string>
     <string name="action_settings">Settings</string>
+    <string name="api_call">Calling Google Calendar API&#8230;</string>
+    <string name="click_buttons">Click buttons to test the API.</string>
+    <string name="button_text_get">Get events list</string>
+    <string name="button_text_add">Add new event to calendar</string>
+    <string name="google_services_is_requires">This app requires Google Play Services. Please install\n
+        Google Play Services on your device and relaunch this app.</string>
+    <string name="no_network">No network connection available.</string>
+    <string name="request_cancelled">Request cancelled.</string>
+    <string name="no_result_returned">No results returned.</string>
+    <string name="following_error">The following error occurred:\n</string>
 </resources>

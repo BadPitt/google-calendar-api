@@ -6,7 +6,7 @@ android {
     buildToolsVersion "24.0.2"
 
     defaultConfig {
-        applicationId "com.example.badpitt.myrxjavaexample"
+        applicationId "com.example.badpitt.googlecalendarapi"
         minSdkVersion 14
         targetSdkVersion 24
         versionCode 1
